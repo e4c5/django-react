@@ -1,0 +1,29 @@
+version: "3"
+services:
+    babel:
+        build: babel
+        volumes:
+          - ./app:/var/www/django
+        command: ["npx", "babel", "--watch", "django/app/static/jsx",
+                 "--out-dir", "django/app/static/js", "--presets", "react-app/prod"]
+
+    django:
+        build: .
+        volumes:
+          - ./log:/var/log/gunicorn
+          - ./app:/var/www/django
+        working_dir: /var/www/django
+        ports:
+          - "8000:8000" 
+    nginx:
+        image: nginx
+        ports:
+          - "80:80"
+          - "443:443"
+
+        volumes:
+          - ./app:/var/www/django
+          - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+          - ./log:/var/log/nginx
+        depends_on: 
+          - django
